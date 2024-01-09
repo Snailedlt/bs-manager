@@ -1,4 +1,4 @@
-import { MapFilter, MapSpecificity, MapStyle, MapTag, MapType } from "shared/models/maps/beat-saver.model";
+import { MapFilter, MapOtherTags, MapSpecificity, MapStyle, MapTag, MapType } from "shared/models/maps/beat-saver.model";
 import { motion } from "framer-motion";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { MAP_TYPES } from "renderer/partials/maps/map-tags/map-types";
@@ -15,6 +15,7 @@ import { BsmButton } from "../shared/bsm-button.component";
 import equal from "fast-deep-equal/es6";
 import clone from "rfdc";
 import { GlowEffect } from "../shared/glow-effect.component";
+import { MAP_OTHER_TAGS } from "renderer/partials/maps/map-tags/map-other-tags";
 
 export type Props = {
     className?: string;
@@ -142,6 +143,9 @@ export function FilterPanel({ className, ref, playlist = false, filter, onChange
     const translateMapStyle = (style: MapStyle): string => {
         return t(`maps.map-styles.${style}`);
     };
+    const translateMapOtherTags = (tag: MapOtherTags): string => {
+        return t(`maps.map-other-tags.${tag}`);
+    };
 
     const translateMapSpecificity = (specificity: MapSpecificity): string => {
         return t(`maps.map-specificities.${specificity}`);
@@ -167,49 +171,56 @@ export function FilterPanel({ className, ref, playlist = false, filter, onChange
 
     return !playlist ? (
         <motion.div ref={ref} className={`${className} bg-light-main-color-2 dark:bg-main-color-3`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <div className="w-full h-6 grid grid-cols-2 gap-x-12 px-4 mb-6 pt-1">
-              <BsmRange min={MIN_NPS} max={MAX_NPS} values={npss} onChange={onNpssChange} renderLabel={renderNpsLabel} step={0.1} />
-              <BsmRange min={MIN_DURATION} max={MAX_DURATION} values={durations} onChange={onDurationsChange} renderLabel={renderDurationLabel} step={5} />
-              <span className=" text-sm font-bold text-center mt-2.5">{t("maps.map-filter-panel.nps")}</span>
-              <span className=" text-sm font-bold text-center mt-2.5">{t("maps.map-filter-panel.duration")}</span>
+            <div className="grid w-full h-6 grid-cols-2 px-4 pt-1 mb-6 gap-x-12">
+                <BsmRange min={MIN_NPS} max={MAX_NPS} values={npss} onChange={onNpssChange} renderLabel={renderNpsLabel} step={0.1} />
+                <BsmRange min={MIN_DURATION} max={MAX_DURATION} values={durations} onChange={onDurationsChange} renderLabel={renderDurationLabel} step={5} />
+                <span className=" text-sm font-bold text-center mt-2.5">{t("maps.map-filter-panel.nps")}</span>
+                <span className=" text-sm font-bold text-center mt-2.5">{t("maps.map-filter-panel.duration")}</span>
             </div>
-            <div className="w-full h-full flex gap-x-2">
+            <div className="flex w-full h-full gap-x-2">
                 <section className="shrink-0">
-                    <h2 className="mb-1 uppercase text-sm">{t("maps.map-filter-panel.specificities")}</h2>
+                    <h2 className="mb-1 text-sm uppercase">{t("maps.map-filter-panel.specificities")}</h2>
                     {MAP_SPECIFICITIES.map(specificity => (
                         <div key={specificity} className="flex justify-start items-center h-[22px] z-20 relative py-0.5 cursor-pointer" onClick={() => handleCheckbox(specificity)}>
-                            <BsmCheckbox className="h-full aspect-square relative bg-inherit mr-1" checked={filter?.[specificity]} onChange={() => handleCheckbox(specificity)} />
-                            <span className="grow capitalize">{translateMapSpecificity(specificity)}</span>
+                            <BsmCheckbox className="relative h-full mr-1 aspect-square bg-inherit" checked={filter?.[specificity]} onChange={() => handleCheckbox(specificity)} />
+                            <span className="capitalize grow">{translateMapSpecificity(specificity)}</span>
                         </div>
                     ))}
-                    <h2 className="my-1 uppercase text-sm">{t("maps.map-filter-panel.requirements")}</h2>
+                    <h2 className="my-1 text-sm uppercase">{t("maps.map-filter-panel.requirements")}</h2>
                     {MAP_REQUIREMENTS.map(requirement => (
                         <div key={requirement} className="flex justify-start items-center h-[22px] z-20 relative py-0.5 cursor-pointer" onClick={() => handleCheckbox(requirement)}>
-                            <BsmCheckbox className="h-full aspect-square relative bg-inherit mr-1" checked={filter?.[requirement]} onChange={() => handleCheckbox(requirement)} />
-                            <span className="grow capitalize">{requirement}</span>
+                            <BsmCheckbox className="relative h-full mr-1 aspect-square bg-inherit" checked={filter?.[requirement]} onChange={() => handleCheckbox(requirement)} />
+                            <span className="capitalize grow">{requirement}</span>
                         </div>
                     ))}
                 </section>
-                <section className="grow capitalize">
-                    <h2 className="uppercase text-sm mb-1">{t("maps.map-filter-panel.tags")}</h2>
-                    <div className="w-full flex flex-row flex-wrap items-start justify-start content-start gap-1 mb-2">
+                <section className="capitalize grow">
+                    <h2 className="mb-1 text-sm uppercase">{t("maps.map-filter-panel.tags")}</h2>
+                    <div className="flex flex-row flex-wrap items-start content-start justify-start w-full gap-1 mb-2">
                         {MAP_TYPES.map(tag => (
                             <span key={tag} onClick={() => handleTagClick(tag)} className={`text-[12.5px] text-black rounded-md px-1 font-bold cursor-pointer ${!isTagActivated(tag) && "opacity-40 hover:opacity-90"}`} style={{ backgroundColor: isTagExcluded(tag) ? MAP_DIFFICULTIES_COLORS.Expert : MAP_DIFFICULTIES_COLORS.Normal }}>
                                 {translateMapType(tag)}
                             </span>
                         ))}
                     </div>
-                    <div className="w-full flex flex-row flex-wrap items-start justify-start content-start gap-1">
+                    <div className="flex flex-row flex-wrap items-start content-start justify-start w-full gap-1 mb-2">
                         {MAP_STYLES.map(tag => (
                             <span key={tag} onClick={() => handleTagClick(tag)} className={`text-[12.5px] text-black rounded-md px-1 font-bold cursor-pointer ${!isTagActivated(tag) && "opacity-40 hover:opacity-90"}`} style={{ backgroundColor: isTagExcluded(tag) ? MAP_DIFFICULTIES_COLORS.Expert : MAP_DIFFICULTIES_COLORS.Easy }}>
                                 {translateMapStyle(tag)}
                             </span>
                         ))}
                     </div>
+                    <div className="flex flex-row flex-wrap items-start content-start justify-start w-full gap-1">
+                        {MAP_OTHER_TAGS.map(tag => (
+                            <span key={tag} onClick={() => handleTagClick(tag)} className={`text-[12.5px] text-black rounded-md px-1 font-bold cursor-pointer ${!isTagActivated(tag) && "opacity-40 hover:opacity-90"}`} style={{ backgroundColor: isTagExcluded(tag) ? MAP_DIFFICULTIES_COLORS.Expert : MAP_DIFFICULTIES_COLORS.ExpertPlus }}>
+                                {translateMapOtherTags(tag)}
+                            </span>
+                        ))}
+                    </div>
                 </section>
             </div>
             {onApply && (
-                <div className="inline float-right relative w-fit h-fit mt-2">
+                <div className="relative inline float-right mt-2 w-fit h-fit">
                     <BsmButton className="inline float-right rounded-md font-bold px-1 py-0.5 text-sm" text="misc.apply" typeColor="primary" withBar={false} onClick={handleApply} />
                     <GlowEffect visible={haveChanged} />
                 </div>

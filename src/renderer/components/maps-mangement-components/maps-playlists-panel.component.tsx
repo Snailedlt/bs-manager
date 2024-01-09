@@ -24,7 +24,6 @@ type Props = {
 };
 
 export function MapsPlaylistsPanel({ version, isActive }: Props) {
-    
     const mapsService = useService(MapsManagerService);
     const mapsDownloader = useService(MapsDownloaderService);
     const linker = useService(VersionFolderLinkerService);
@@ -34,7 +33,7 @@ export function MapsPlaylistsPanel({ version, isActive }: Props) {
     const [mapSearch, setMapSearch] = useState("");
     const [playlistSearch, setPlaylistSearch] = useState("");
     const [mapsLinked, setMapsLinked] = useState(false);
-    const mapsLinkedState = useObservable(() => version ? mapsService.$mapsFolderLinkState(version) : of(null), FolderLinkState.Unlinked, [version]);
+    const mapsLinkedState = useObservable(() => (version ? mapsService.$mapsFolderLinkState(version) : of(null)), FolderLinkState.Unlinked, [version]);
     const t = useTranslation();
     const mapsRef = useRef<any>();
 
@@ -96,15 +95,7 @@ export function MapsPlaylistsPanel({ version, isActive }: Props) {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-4">
             <nav className="w-full shrink-0 flex h-9 justify-center px-40 gap-2 text-main-color-1 dark:text-white">
-                <BsmButton
-                    className="flex items-center justify-center w-fit rounded-full px-2 py-1 font-bold"
-                    icon="add"
-                    text="misc.add"
-                    typeColor="primary"
-                    withBar={false}
-                    disabled={tabIndex === 1}
-                    onClick={handleMapsAddClick}
-                />
+                <BsmButton className="flex items-center justify-center w-fit rounded-full px-2 py-1 font-bold" icon="add" text="misc.add" typeColor="primary" withBar={false} disabled={tabIndex === 1} onClick={handleMapsAddClick} />
                 <div className="h-full rounded-full bg-light-main-color-2 dark:bg-main-color-2 grow p-[6px]">
                     <input type="text" className="h-full w-full bg-light-main-color-1 dark:bg-main-color-1 rounded-full px-2" placeholder={t("pages.version-viewer.maps.search-bar.search-placeholder")} value={tabIndex === 0 ? mapSearch : playlistSearch} onChange={e => handleSearch(e.target.value)} tabIndex={-1} />
                 </div>
@@ -121,10 +112,12 @@ export function MapsPlaylistsPanel({ version, isActive }: Props) {
                         text: "misc.maps",
                         icon: MapIcon,
                         onClick: () => setTabIndex(0),
-                        linkProps: version ? {
-                            state: mapsLinkedState,
-                            onClick: handleMapsLinkClick,
-                        } : null,
+                        linkProps: version
+                            ? {
+                                  state: mapsLinkedState,
+                                  onClick: handleMapsLinkClick,
+                              }
+                            : null,
                     },
                     {
                         text: "misc.playlists",

@@ -25,10 +25,10 @@ export class BeatSaverApiService {
             return new URLSearchParams();
         }
 
-        const enbledTagsString = filter.enabledTags ? Array.from(filter.enabledTags) : null;
+        const enabledTagsString = filter.enabledTags ? Array.from(filter.enabledTags) : null;
         const excludedTagsString = filter.excludedTags ? Array.from(filter.excludedTags).map(tag => `!${tag}`) : null;
 
-        const tags = enbledTagsString || excludedTagsString ? [...enbledTagsString, excludedTagsString].join("|") : null;
+        const tags = enabledTagsString || excludedTagsString ? [...enabledTagsString, excludedTagsString].join("|") : null;
 
         const params = {
             ...(filter.automapper && { automapper: String(filter.automapper) }),
@@ -85,7 +85,7 @@ export class BeatSaverApiService {
                 [key]: data as BsvMapDetail,
             } as Record<Lowercase<T>, BsvMapDetail>;
 
-            return parsedData
+            return parsedData;
         }
 
         return data as Record<Lowercase<T>, BsvMapDetail>;

@@ -78,9 +78,20 @@ export const DownloadMapsModal: ModalComponent<void, { version: BSVersion; owned
 
     const loadMaps = (params: SearchParams) => {
         setLoading(() => true);
+        console.log("params.filter.installed", params.filter.installed);
         beatSaver
             .searchMaps(params)
-            .then(maps => setMaps(prev => [...prev, ...maps]))
+            .then(maps =>
+                params.filter.installed === undefined
+                    ? setMaps(prev => [...prev, ...maps])
+                    : setMaps(prev => [
+                          ...prev,
+                          ...maps.filter(map => {
+                              console.log("isMapOwned");
+                              return isMapOwned(map) === params.filter.installed;
+                          }),
+                      ])
+            )
             .finally(() => setLoading(() => false));
     };
 
@@ -96,12 +107,16 @@ export const DownloadMapsModal: ModalComponent<void, { version: BSVersion; owned
         return res;
     };
 
+    const isMapOwned = (map: BsvMapDetail) => {
+        return map.versions.some(version => ownedMapHashs.includes(version.hash));
+    };
+
     const renderMap = (map: BsvMapDetail) => {
-        const isMapOwned = map.versions.some(version => ownedMapHashs.includes(version.hash));
+        const mapIsOwned = isMapOwned(map);
         const isDownloading = map.id === currentDownload?.map?.id;
         const inQueue = mapsInQueue.some(toDownload => equal(toDownload.version, version) && toDownload.map.id === map.id);
 
-        return <MapItem autor={map.metadata.levelAuthorName} autorId={map.uploader.id} bpm={map.metadata.bpm} coverUrl={map.versions.at(0).coverURL} createdAt={map.createdAt} duration={map.metadata.duration} hash={map.versions.at(0).hash} likes={map.stats.upvotes} mapId={map.id} ranked={map.ranked} title={map.name} songAutor={map.metadata.songAuthorName} diffs={extractMapDiffs(map)} songUrl={map.versions.at(0).previewURL} key={map.id} onDownload={!isMapOwned && !inQueue && handleDownloadMap} onDoubleClick={!isMapOwned && !inQueue && handleDownloadMap} onCancelDownload={inQueue && !isDownloading && handleCancelDownload} downloading={isDownloading} showOwned={isMapOwned} callBackParam={map} />;
+        return <MapItem autor={map.metadata.levelAuthorName} autorId={map.uploader.id} bpm={map.metadata.bpm} coverUrl={map.versions.at(0).coverURL} createdAt={map.createdAt} duration={map.metadata.duration} hash={map.versions.at(0).hash} likes={map.stats.upvotes} mapId={map.id} ranked={map.ranked} title={map.name} songAutor={map.metadata.songAuthorName} diffs={extractMapDiffs(map)} songUrl={map.versions.at(0).previewURL} key={map.id} onDownload={!mapIsOwned && !inQueue && handleDownloadMap} onDoubleClick={!isMapOwned && !inQueue && handleDownloadMap} onCancelDownload={inQueue && !isDownloading && handleCancelDownload} downloading={isDownloading} showOwned={mapIsOwned} callBackParam={map} />;
     };
 
     const handleDownloadMap = useCallback((map: BsvMapDetail) => {
@@ -144,7 +159,7 @@ export const DownloadMapsModal: ModalComponent<void, { version: BSVersion; owned
                 handleSearch();
             }}
         >
-            <div className="flex h-9 gap-2 shrink-0">
+            <div className="flex gap-2 h-9 shrink-0">
                 <BsmDropdownButton ref={filterContainerRef} className="shrink-0 h-full relative z-[1] flex justify-start" buttonClassName="flex items-center justify-center h-full rounded-full px-2 py-1 !bg-light-main-color-1 dark:!bg-main-color-1" icon="filter" text="pages.version-viewer.maps.search-bar.filters-btn" withBar={false}>
                     <FilterPanel className="absolute top-[calc(100%+3px)] origin-top w-[450px] h-fit p-2 rounded-md shadow-md shadow-black" filter={filter} onChange={setFilter} onApply={handleSearch} onClose={() => filterContainerRef.current.close()} />
                 </BsmDropdownButton>
@@ -163,7 +178,7 @@ export const DownloadMapsModal: ModalComponent<void, { version: BSVersion; owned
             </div>
             <ul className="w-full grow flex content-start flex-wrap gap-2 pt-1.5 px-2 overflow-y-scroll overflow-x-hidden scrollbar-thin scrollbar-thumb-rounded-full scrollbar-thumb-neutral-900 z-0">
                 {maps.length === 0 ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center">
+                    <div className="flex flex-col items-center justify-center w-full h-full">
                         <img className={`w-32 h-32 ${loading && "spin-loading"}`} src={loading ? BeatWaitingImg : BeatConflictImg} alt=" " />
                         <span className="text-lg">
                             {(() => {
